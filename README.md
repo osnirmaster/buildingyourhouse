@@ -2,6 +2,8 @@
 
 Orçamento paramétrico e análise de custo de obras residenciais, usando o **CUB/m² do Sinduscon-SP** (NBR 12721) para o Estado de São Paulo.
 
+**Acesse:** https://osnirmaster.github.io/buildingyourhouse/ (deploy automático no GitHub Pages a cada push na `main`).
+
 Aplicação web 100% no navegador (React + Vite + TypeScript + Zustand). Os dados ficam no `localStorage`; use **Exportar/Importar backup** (JSON) para não perdê-los quando o cache do navegador for limpo.
 
 ## Funcionalidades
