@@ -1,12 +1,19 @@
 import type { AreaTipo, CubTable, Padrao, Project, Stage } from '../types';
 
+export type EtapaOrcada = Stage & { valor: number; valorMaterial: number; valorMaoDeObra: number };
+
 export interface Budget {
   areaReal: number;
   areaEquivalente: number;
   cubM2: number | null;
+  /** CUB × área equivalente. */
   custoBase: number;
-  etapas: (Stage & { valor: number })[];
-  adicionais: { id: string; nome: string; percentual: number; valor: number }[];
+  /** Custo base com o ajuste de mão de obra da autoconstrução (soma das etapas). */
+  custoDireto: number;
+  totalMaterial: number;
+  totalMaoDeObra: number;
+  etapas: EtapaOrcada[];
+  adicionais: { id: string; nome: string; percentual: number; base: 'custo' | 'maoDeObra'; valor: number }[];
   totalAdicionais: number;
   total: number;
   custoM2Real: number;
@@ -32,17 +39,32 @@ export function calcBudget(project: Project, cub: CubTable, stages: Stage[], tip
   const cubM2 = cubValor(cub, project);
   const custoBase = (cubM2 ?? 0) * equivalente;
   const somaPct = stages.reduce((s, e) => s + e.percentual, 0) || 1;
-  const etapas = stages.map((e) => ({ ...e, valor: (custoBase * e.percentual) / somaPct }));
+  const fatorMaoDeObra = project.contratacao === 'autoconstrucao' ? (project.ajusteMaoDeObra ?? 100) / 100 : 1;
+  const etapas: EtapaOrcada[] = stages.map((e) => {
+    const bruto = (custoBase * e.percentual) / somaPct;
+    const valorMaoDeObra = ((bruto * e.maoDeObra) / 100) * fatorMaoDeObra;
+    const valorMaterial = bruto * (1 - e.maoDeObra / 100);
+    return { ...e, valorMaterial, valorMaoDeObra, valor: valorMaterial + valorMaoDeObra };
+  });
+  const totalMaterial = etapas.reduce((s, e) => s + e.valorMaterial, 0);
+  const totalMaoDeObra = etapas.reduce((s, e) => s + e.valorMaoDeObra, 0);
+  const custoDireto = totalMaterial + totalMaoDeObra;
   const adicionais = project.adicionais
     .filter((a) => a.ativo)
-    .map((a) => ({ id: a.id, nome: a.nome, percentual: a.percentual, valor: (custoBase * a.percentual) / 100 }));
+    .map((a) => {
+      const base = a.base ?? 'custo';
+      return { id: a.id, nome: a.nome, percentual: a.percentual, base, valor: ((base === 'maoDeObra' ? totalMaoDeObra : custoDireto) * a.percentual) / 100 };
+    });
   const totalAdicionais = adicionais.reduce((s, a) => s + a.valor, 0);
-  const total = custoBase + totalAdicionais;
+  const total = custoDireto + totalAdicionais;
   return {
     areaReal: real,
     areaEquivalente: equivalente,
     cubM2,
     custoBase,
+    custoDireto,
+    totalMaterial,
+    totalMaoDeObra,
     etapas,
     adicionais,
     totalAdicionais,

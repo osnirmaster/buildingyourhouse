@@ -1,6 +1,7 @@
 export type Padrao = 'baixo' | 'normal' | 'alto';
 export type TipoProjeto = 'R1' | 'R8' | 'R16';
 export type Regime = 'naoDesonerado' | 'desonerado';
+export type Contratacao = 'empreitada' | 'administracao' | 'autoconstrucao';
 
 export interface AreaTipo {
   id: string;
@@ -21,8 +22,9 @@ export interface Room {
 export interface Adicional {
   id: string;
   nome: string;
-  /** Percentual sobre o custo base (CUB × área equivalente). */
+  /** Percentual sobre o custo direto da obra, ou só sobre a mão de obra (base = 'maoDeObra'). */
   percentual: number;
+  base?: 'custo' | 'maoDeObra';
   ativo: boolean;
   descricao: string;
 }
@@ -42,6 +44,9 @@ export interface Project {
   tipo: TipoProjeto;
   padrao: Padrao;
   regime: Regime;
+  contratacao: Contratacao;
+  /** Autoconstrução: custo da mão de obra contratada diretamente em relação ao CUB (%). */
+  ajusteMaoDeObra: number;
   duracaoMeses: number;
   areaTotalDeclarada?: number;
   observacoes: string;
@@ -63,6 +68,8 @@ export interface Stage {
   nome: string;
   /** Peso da etapa no custo base (%). */
   percentual: number;
+  /** Parcela de mão de obra dentro da etapa (%); o restante é material. */
+  maoDeObra: number;
   /** Janela da etapa no cronograma, como fração da duração (0–1). */
   inicio: number;
   fim: number;

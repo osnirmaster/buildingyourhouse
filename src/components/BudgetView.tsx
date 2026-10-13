@@ -1,10 +1,10 @@
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useActiveProject, useStore } from '../store/useStore';
 import { calcBudget, compararPadroes } from '../lib/calc';
 import { fmtBRL, fmtBRLCompact, fmtM2, fmtPct } from '../lib/format';
-import { PADRAO_LABEL } from '../data/referencias';
+import { CONTRATACAO_INFO, PADRAO_LABEL } from '../data/referencias';
 import { Card, Empty, NumInput, Stat } from './ui';
-import { INK, SERIES, axisProps } from './charts';
+import { INK, SERIES, axisProps, legendFormatter } from './charts';
 
 const PADRAO_CURTO = { baixo: 'Baixo', normal: 'Médio', alto: 'Alto' } as const;
 
@@ -17,6 +17,8 @@ export function BudgetView() {
   const b = calcBudget(project, cub, stages, areaTipos);
   const comparativo = compararPadroes(project, cub, stages, areaTipos);
   const etapasOrdenadas = [...b.etapas].sort((x, y) => y.valor - x.valor);
+  const pctDireto = (v: number) => fmtPct(b.custoDireto ? (v / b.custoDireto) * 100 : 0);
+  const valorAdicional = (id: string) => b.adicionais.find((x) => x.id === id)?.valor;
 
   const setAdicional = (id: string, patch: { ativo?: boolean; percentual?: number }) =>
     updateProject(project.id, { adicionais: project.adicionais.map((a) => (a.id === id ? { ...a, ...patch } : a)) });
@@ -27,10 +29,11 @@ export function BudgetView() {
         <p className="badge warn">⚠ CUB não publicado para esta combinação de tipo/padrão/regime. Ajuste em Dados.</p>
       )}
       <div className="stats">
-        <Stat label="Custo total estimado" value={fmtBRL(b.total)} hint={PADRAO_LABEL[project.padrao]} />
-        <Stat label="Custo por m² (área real)" value={fmtBRL(b.custoM2Real)} hint={`CUB ${b.cubM2 ? fmtBRL(b.cubM2) : '—'}/m²`} />
-        <Stat label="Área real" value={fmtM2(b.areaReal)} hint={`Equivalente: ${fmtM2(b.areaEquivalente)}`} />
-        <Stat label="Custo base (CUB × área eq.)" value={fmtBRL(b.custoBase)} hint={`+ ${fmtBRL(b.totalAdicionais)} fora do CUB`} />
+        <Stat label="Custo total estimado" value={fmtBRL(b.total)} hint={`${PADRAO_LABEL[project.padrao]} · ${CONTRATACAO_INFO[project.contratacao].nome}`} />
+        <Stat label="Custo por m² (área real)" value={fmtBRL(b.custoM2Real)} hint={`CUB ${b.cubM2 ? fmtBRL(b.cubM2) : '—'}/m² · ${fmtM2(b.areaReal)}`} />
+        <Stat label="Materiais" value={fmtBRL(b.totalMaterial)} hint={`${pctDireto(b.totalMaterial)} do custo direto`} />
+        <Stat label="Mão de obra" value={fmtBRL(b.totalMaoDeObra)} hint={`${pctDireto(b.totalMaoDeObra)} do custo direto`} />
+        <Stat label="Fora do CUB" value={fmtBRL(b.totalAdicionais)} hint="Fundações, projetos, BDI, taxas…" />
       </div>
 
       <div className="two-col">
@@ -41,7 +44,9 @@ export function BudgetView() {
               <XAxis type="number" tickFormatter={fmtBRLCompact} {...axisProps} />
               <YAxis type="category" dataKey="nome" width={190} {...axisProps} />
               <Tooltip formatter={(v) => fmtBRL(Number(v))} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-              <Bar dataKey="valor" name="Valor" fill={SERIES[0]} radius={[0, 4, 4, 0]} barSize={16} />
+              <Legend formatter={legendFormatter} />
+              <Bar dataKey="valorMaterial" name="Materiais" stackId="e" fill={SERIES[0]} stroke="#fff" strokeWidth={2} barSize={16} />
+              <Bar dataKey="valorMaoDeObra" name="Mão de obra" stackId="e" fill={SERIES[1]} stroke="#fff" strokeWidth={2} radius={[0, 4, 4, 0]} barSize={16} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -71,7 +76,10 @@ export function BudgetView() {
       </div>
 
       <Card title="Itens não incluídos no CUB (NBR 12721)">
-        <p className="hint">Percentuais sobre o custo base. Ajuste conforme seu caso.</p>
+        <p className="hint">
+          Percentuais sobre o custo direto da obra (exceto INSS, sobre a mão de obra). Os itens de BDI e INSS mudam conforme a
+          forma de contratação escolhida em Cômodos.
+        </p>
         <table>
           <thead>
             <tr>
@@ -94,8 +102,9 @@ export function BudgetView() {
                 </td>
                 <td className="num">
                   <NumInput step={0.5} value={a.percentual} onChange={(v) => setAdicional(a.id, { percentual: v })} />
+                  {a.base === 'maoDeObra' && <small> da mão de obra</small>}
                 </td>
-                <td className="num">{a.ativo ? fmtBRL((b.custoBase * a.percentual) / 100) : '—'}</td>
+                <td className="num">{a.ativo ? fmtBRL(valorAdicional(a.id) ?? 0) : '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -107,8 +116,10 @@ export function BudgetView() {
           <thead>
             <tr>
               <th>Etapa</th>
-              <th className="num">% do custo base</th>
-              <th className="num">Valor</th>
+              <th className="num">% do custo</th>
+              <th className="num">Materiais</th>
+              <th className="num">Mão de obra</th>
+              <th className="num">Total</th>
               <th className="num">R$/m²</th>
             </tr>
           </thead>
@@ -117,6 +128,8 @@ export function BudgetView() {
               <tr key={e.id}>
                 <td>{e.nome}</td>
                 <td className="num">{fmtPct(e.percentual)}</td>
+                <td className="num">{fmtBRL(e.valorMaterial)}</td>
+                <td className="num">{fmtBRL(e.valorMaoDeObra)}</td>
                 <td className="num">{fmtBRL(e.valor)}</td>
                 <td className="num">{b.areaReal ? fmtBRL(e.valor / b.areaReal) : '—'}</td>
               </tr>
@@ -125,6 +138,8 @@ export function BudgetView() {
               <tr key={a.id} className="muted-row">
                 <td>{a.nome} (fora do CUB)</td>
                 <td className="num">{fmtPct(a.percentual)}</td>
+                <td />
+                <td />
                 <td className="num">{fmtBRL(a.valor)}</td>
                 <td className="num">{b.areaReal ? fmtBRL(a.valor / b.areaReal) : '—'}</td>
               </tr>
@@ -134,6 +149,8 @@ export function BudgetView() {
             <tr>
               <td>Total</td>
               <td />
+              <td className="num">{fmtBRL(b.totalMaterial)}</td>
+              <td className="num">{fmtBRL(b.totalMaoDeObra)}</td>
               <td className="num">{fmtBRL(b.total)}</td>
               <td className="num">{fmtBRL(b.custoM2Real)}</td>
             </tr>
