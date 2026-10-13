@@ -212,3 +212,21 @@ button.chip:hover { background: #eef1f6; }
   .content { margin-top: 0; }
   .card { box-shadow: none; }
 }
+
+/* ---------- Upload da planta ---------- */
+.dropzone {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  margin: 16px 0; padding: 36px 24px; text-align: center;
+  border: 2px dashed #c4ccd8; border-radius: var(--radius); background: var(--bg-soft);
+  color: var(--navy); transition: border-color 0.15s, background 0.15s;
+}
+.dropzone.over { border-color: var(--blurple); background: #f5f4ff; }
+.dropzone-icon {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: #fff; color: var(--blurple); font-size: 1.2rem; box-shadow: var(--shadow-sm);
+}
+.progress { color: var(--blurple); font-weight: 500; }
+.import-actions { justify-content: flex-end; align-items: center; }
+.import-actions > span:first-child { margin-right: auto; }
+.tag + .tag { margin-left: 4px; }
+td input.room-name { min-width: 220px; }
