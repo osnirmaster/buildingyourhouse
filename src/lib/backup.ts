@@ -1,7 +1,8 @@
 import type { AppData } from '../types';
+import { normalizeProject, normalizeStage } from './migrate';
 
 const APP = 'buildingyourhouse';
-const VERSION = 1;
+const VERSION = 2;
 
 interface BackupFile {
   app: typeof APP;
@@ -37,8 +38,6 @@ export async function readBackup(file: File): Promise<AppData> {
   }
   for (const p of d.projects) {
     if (typeof p.id !== 'string' || !Array.isArray(p.rooms)) throw new Error('Projeto inválido no backup.');
-    p.expenses ??= [];
-    p.adicionais ??= [];
   }
-  return d;
+  return { ...d, projects: d.projects.map(normalizeProject), stages: d.stages.map(normalizeStage) };
 }

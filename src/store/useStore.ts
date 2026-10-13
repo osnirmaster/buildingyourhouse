@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppData, CubTable, Expense, Project, Room, Stage, AreaTipo } from '../types';
 import { ADICIONAIS_PADRAO, AREA_TIPOS_PADRAO, CUB_SP_PADRAO, ETAPAS_PADRAO } from '../data/referencias';
+import { normalizeProject, normalizeStage } from '../lib/migrate';
 
 export const uid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
@@ -54,6 +55,8 @@ const newProject =(nome: string): Project => ({
   tipo: 'R1',
   padrao: 'normal',
   regime: 'naoDesonerado',
+  contratacao: 'empreitada',
+  ajusteMaoDeObra: 85,
   duracaoMeses: 12,
   observacoes: '',
   rooms: [],
@@ -140,7 +143,15 @@ export const useStore = create<State>()(
     },
     {
       name: 'buildingyourhouse',
-      version: 1,
+      version: 2,
+      migrate: (persisted, version) => {
+        const s = persisted as Partial<AppData>;
+        if (version < 2) {
+          s.projects = s.projects?.map(normalizeProject);
+          s.stages = s.stages?.map(normalizeStage);
+        }
+        return s as State;
+      },
       partialize: (s) => ({
         projects: s.projects,
         cub: s.cub,

@@ -4,7 +4,7 @@ import { useActiveProject, useStore } from '../store/useStore';
 import { calcBudget, realizadoPorEtapa } from '../lib/calc';
 import { fmtBRL, fmtBRLCompact, fmtPct } from '../lib/format';
 import { Card, Empty, NumInput, Stat } from './ui';
-import { INK, SERIES, axisProps } from './charts';
+import { INK, SERIES, axisProps, legendFormatter } from './charts';
 
 export function ExpensesView() {
   const project = useActiveProject();
@@ -65,7 +65,7 @@ export function ExpensesView() {
               <XAxis type="number" tickFormatter={fmtBRLCompact} {...axisProps} />
               <YAxis type="category" dataKey="nome" width={190} {...axisProps} />
               <Tooltip formatter={(v) => fmtBRL(Number(v))} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-              <Legend wrapperStyle={{ color: INK.secondary }} />
+              <Legend formatter={legendFormatter} />
               <Bar dataKey="orcado" name="Orçado" fill={SERIES[0]} radius={[0, 4, 4, 0]} barSize={10} />
               <Bar dataKey="realizado" name="Realizado" fill={SERIES[1]} radius={[0, 4, 4, 0]} barSize={10} />
             </BarChart>
