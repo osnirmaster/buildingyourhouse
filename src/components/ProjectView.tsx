@@ -3,8 +3,8 @@ import { useActiveProject, useStore } from '../store/useStore';
 import { areas, cubValor } from '../lib/calc';
 import { fmtBRL, fmtM2 } from '../lib/format';
 import { sugerirTipoArea } from '../lib/pdfExtract';
-import { PADRAO_LABEL, TIPO_LABEL } from '../data/referencias';
-import type { Padrao, Regime, TipoProjeto } from '../types';
+import { CONTRATACAO_INFO, PADRAO_LABEL, TIPO_LABEL, aplicarContratacao } from '../data/referencias';
+import type { Contratacao, Padrao, Regime, TipoProjeto } from '../types';
 import { Card, Empty, NumInput } from './ui';
 
 export function ProjectView() {
@@ -56,7 +56,29 @@ export function ProjectView() {
             </select>
           </label>
           <label>
-            Regime de contratação
+            Forma de contratação
+            <select
+              value={project.contratacao}
+              onChange={(e) => {
+                const c = e.target.value as Contratacao;
+                set({ contratacao: c, adicionais: aplicarContratacao(project.adicionais, c) });
+              }}
+            >
+              {Object.entries(CONTRATACAO_INFO).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+          {project.contratacao === 'autoconstrucao' && (
+            <label title="Pedreiros e empreiteiros contratados direto costumam custar menos que a mão de obra registrada considerada no CUB.">
+              Custo da mão de obra direta (% do CUB)
+              <NumInput step={5} min={0} value={project.ajusteMaoDeObra} onChange={(v) => set({ ajusteMaoDeObra: v })} />
+            </label>
+          )}
+          <label>
+            Tabela CUB (encargos)
             <select value={project.regime} onChange={(e) => set({ regime: e.target.value as Regime })}>
               <option value="naoDesonerado">Não desonerado (pessoa física / padrão)</option>
               <option value="desonerado">Desonerado (construtora com folha desonerada)</option>
@@ -67,6 +89,10 @@ export function ProjectView() {
             <NumInput step={1} min={1} value={project.duracaoMeses} onChange={(v) => set({ duracaoMeses: Math.max(1, v) })} />
           </label>
         </div>
+        <p className="hint">
+          <strong>{CONTRATACAO_INFO[project.contratacao].nome}:</strong> {CONTRATACAO_INFO[project.contratacao].descricao} Os itens
+          de BDI/administração e INSS da obra são ajustados no Orçamento.
+        </p>
         <p className="hint">
           CUB aplicado:{' '}
           {cubM2 === null ? (

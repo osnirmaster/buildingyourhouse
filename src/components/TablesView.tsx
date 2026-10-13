@@ -71,15 +71,20 @@ export function TablesView() {
         ))}
       </Card>
 
-      <Card title="Distribuição por etapa e janela no cronograma">
+      <Card title="Distribuição por etapa, mão de obra e janela no cronograma">
         <p className={Math.abs(somaEtapas - 100) > 0.01 ? 'hint error' : 'hint'}>
           Soma: {fmtPct(somaEtapas)} {Math.abs(somaEtapas - 100) > 0.01 && '(os valores são normalizados para 100% no cálculo)'}
+        </p>
+        <p className="hint">
+          “% mão de obra” é a parcela de cada etapa paga em mão de obra (o restante é material). Valores de referência de
+          mercado; no CUB-SP a mão de obra representa mais da metade do custo.
         </p>
         <table>
           <thead>
             <tr>
               <th>Etapa</th>
               <th className="num">% custo</th>
+              <th className="num">% mão de obra</th>
               <th className="num">Início (%)</th>
               <th className="num">Fim (%)</th>
             </tr>
@@ -92,6 +97,9 @@ export function TablesView() {
                   <td>{s.nome}</td>
                   <td className="num">
                     <NumInput step={0.5} value={s.percentual} onChange={(v) => upd({ percentual: v })} />
+                  </td>
+                  <td className="num">
+                    <NumInput step={5} value={s.maoDeObra} onChange={(v) => upd({ maoDeObra: Math.min(100, v) })} />
                   </td>
                   <td className="num">
                     <NumInput step={5} value={Math.round(s.inicio * 100)} onChange={(v) => upd({ inicio: Math.min(v, 100) / 100 })} />

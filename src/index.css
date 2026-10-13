@@ -134,7 +134,7 @@ button:hover .arrow { transform: translateX(3px); }
 .two-col .card { box-shadow: var(--shadow-sm); }
 @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
 
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
 .stat {
   background: #fff; border-radius: var(--radius); padding: 20px 22px;
   box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 2px;

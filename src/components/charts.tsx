@@ -6,3 +6,6 @@ export const axisProps = {
   axisLine: { stroke: INK.grid },
   tickLine: false,
 } as const;
+
+/** Texto da legenda em cor neutra; a identidade da série fica no marcador. */
+export const legendFormatter = (value: string) => <span style={{ color: INK.secondary }}>{value}</span>;
