@@ -1,8 +1,9 @@
-import * as pdfjs from 'pdfjs-dist';
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import './polyfills';
+// Build "legacy" do pdf.js: inclui polyfills para navegadores móveis mais antigos (Safari/iOS).
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { extractFromText, type PdfExtraction, type PdfText } from './pdfExtract';
 
-pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+pdfjs.GlobalWorkerOptions.workerPort = new Worker(new URL('./pdf.worker.ts', import.meta.url), { type: 'module' });
 
 export async function extractFromPdf(file: File, onProgress?: (pagina: number, total: number) => void): Promise<PdfExtraction> {
   const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
