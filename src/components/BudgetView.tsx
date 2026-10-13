@@ -6,6 +6,8 @@ import { PADRAO_LABEL } from '../data/referencias';
 import { Card, Empty, NumInput, Stat } from './ui';
 import { INK, SERIES, axisProps } from './charts';
 
+const PADRAO_CURTO = { baixo: 'Baixo', normal: 'Médio', alto: 'Alto' } as const;
+
 export function BudgetView() {
   const project = useActiveProject();
   const { cub, stages, areaTipos, updateProject } = useStore();
@@ -46,9 +48,9 @@ export function BudgetView() {
 
         <Card title="Comparativo por padrão de acabamento">
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={comparativo.map((c) => ({ ...c, nome: PADRAO_LABEL[c.padrao] }))} margin={{ right: 16 }}>
+            <BarChart data={comparativo.map((c) => ({ ...c, nome: PADRAO_CURTO[c.padrao] }))} margin={{ right: 16 }}>
               <CartesianGrid vertical={false} stroke={INK.grid} />
-              <XAxis dataKey="nome" {...axisProps} />
+              <XAxis dataKey="nome" interval={0} {...axisProps} />
               <YAxis tickFormatter={fmtBRLCompact} width={80} {...axisProps} />
               <Tooltip formatter={(v) => fmtBRL(Number(v))} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
               <Bar dataKey="total" name="Total" fill={SERIES[0]} radius={[4, 4, 0, 0]} barSize={40} />

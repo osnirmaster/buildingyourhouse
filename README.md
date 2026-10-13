@@ -49,3 +49,23 @@ src/
 - **Atualização automática do CUB** (backend que busca o valor mensal) e correção do orçamento pelo INCC.
 - **Sincronização na nuvem** opcional (Supabase/Firebase) e compartilhamento com o engenheiro.
 - **Fluxo de caixa x financiamento** (medições da Caixa, parcelas) e exportação para Excel.
+
+## Fluxo de trabalho (git flow)
+
+```
+feature/*  ──PR──▶  develop  ──PR──▶  main  ──▶  GitHub Pages
+```
+
+- Toda alteração começa numa branch `feature/<nome>` (ou `fix/<nome>`) criada a partir de `develop`.
+- PR `feature/*` → `develop`: o CI roda lint, testes e build.
+- PR `develop` → `main`: o mesmo CI; ao fazer o merge, o deploy no GitHub Pages é automático.
+- `develop` e `main` são protegidas: não aceitam push direto e exigem CI verde (`build` e `branch-policy`).
+- Hotfix urgente: `hotfix/*` a partir de `main`, PR para `main` e depois para `develop`.
+
+```bash
+git checkout develop && git pull
+git checkout -b feature/minha-alteracao
+# ... commits ...
+git push -u origin feature/minha-alteracao
+gh pr create --base develop
+```

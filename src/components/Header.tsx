@@ -1,14 +1,20 @@
 import { useRef, useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useActiveProject, useStore } from '../store/useStore';
 import { exportBackup, readBackup } from '../lib/backup';
 
 const DIAS_LEMBRETE = 7;
 
-export function Header() {
+export interface TabDef<T extends string> {
+  id: T;
+  label: string;
+}
+
+export function Header<T extends string>({ tabs, tab, onTab }: { tabs: readonly TabDef<T>[]; tab: T; onTab: (t: T) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [agora] = useState(() => Date.now());
   const { projects, cub, stages, areaTipos, lastBackupAt, importData, markBackup } = useStore();
+  const project = useActiveProject();
 
   const onExport = () => {
     exportBackup({ projects, cub, stages, areaTipos });
@@ -35,39 +41,49 @@ export function Header() {
   const lembrar = projects.length > 0 && dias > DIAS_LEMBRETE;
 
   return (
-    <header className="app-header">
-      <div className="brand">
-        <span className="logo" aria-hidden>
-          🏠
-        </span>
-        <div>
-          <h1>BuildingYourHouse</h1>
-          <small>Orçamento e análise de custo de obras — CUB Sinduscon-SP</small>
+    <header className="topnav">
+      <div className="container topnav-inner">
+        <button className="wordmark" onClick={() => onTab(tabs[0].id)}>
+          buildingyourhouse
+        </button>
+        <nav className="navlinks" aria-label="Seções">
+          {tabs.map((t) => (
+            <button key={t.id} className={tab === t.id ? 'navlink active' : 'navlink'} onClick={() => onTab(t.id)}>
+              {t.label}
+            </button>
+          ))}
+        </nav>
+        <div className="topnav-actions">
+          <button className="btn-link" onClick={() => fileRef.current?.click()}>
+            Importar backup
+          </button>
+          <button className="btn-pill" onClick={onExport}>
+            Exportar backup <span className="arrow">›</span>
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])}
+          />
         </div>
       </div>
-      <div className="header-actions">
-        {lembrar && (
-          <span className="badge warn" title="Os dados ficam só neste navegador">
-            ⚠ {lastBackupAt ? `Último backup há ${Math.floor(dias)} dias` : 'Nenhum backup feito'}
-          </span>
-        )}
-        {msg && (
-          <span className="badge" onClick={() => setMsg(null)}>
-            {msg}
-          </span>
-        )}
-        <button onClick={onExport}>Exportar backup</button>
-        <button className="secondary" onClick={() => fileRef.current?.click()}>
-          Importar backup
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json,.json"
-          hidden
-          onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])}
-        />
-      </div>
+      {(lembrar || msg || project) && (
+        <div className="container notice-row">
+          {project && <span className="chip">Projeto ativo: {project.nome}</span>}
+          {lembrar && (
+            <span className="chip warn" title="Os dados ficam só neste navegador">
+              {lastBackupAt ? `Último backup há ${Math.floor(dias)} dias` : 'Nenhum backup feito ainda'}
+            </span>
+          )}
+          {msg && (
+            <button className="chip" onClick={() => setMsg(null)}>
+              {msg} ✕
+            </button>
+          )}
+        </div>
+      )}
     </header>
   );
 }
