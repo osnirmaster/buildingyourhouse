@@ -112,7 +112,7 @@ export function ProjectView() {
               {project.rooms.map((r) => (
                 <tr key={r.id}>
                   <td>
-                    <input value={r.nome} onChange={(e) => updateRoom(project.id, r.id, { nome: e.target.value })} />
+                    <input className="room-name" value={r.nome} onChange={(e) => updateRoom(project.id, r.id, { nome: e.target.value })} />
                   </td>
                   <td className="num">
                     <NumInput value={r.area} onChange={(v) => updateRoom(project.id, r.id, { area: v })} />
