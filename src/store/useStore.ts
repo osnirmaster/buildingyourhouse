@@ -11,6 +11,7 @@ interface State extends AppData {
   lastBackupAt: string | null;
 
   createProject: (nome: string) => string;
+  createDemoProject: () => void;
   updateProject: (id: string, patch: Partial<Project>) => void;
   deleteProject: (id: string) => void;
   duplicateProject: (id: string) => void;
@@ -32,7 +33,21 @@ interface State extends AppData {
   markBackup: () => void;
 }
 
-const newProject = (nome: string): Project => ({
+const DEMO_ROOMS: [string, number, string][] = [
+  ['Sala de estar e jantar', 32, 'principal'],
+  ['Cozinha', 14, 'principal'],
+  ['Suíte', 16, 'principal'],
+  ['Banheiro da suíte', 5, 'principal'],
+  ['Dormitório 1', 11, 'principal'],
+  ['Dormitório 2', 10, 'principal'],
+  ['Banheiro social', 4.5, 'principal'],
+  ['Área de serviço', 6, 'principal'],
+  ['Circulação', 7, 'principal'],
+  ['Garagem', 30, 'garagem'],
+  ['Varanda gourmet', 18, 'varanda'],
+];
+
+const newProject =(nome: string): Project => ({
   id: uid(),
   nome,
   cidade: 'São Paulo',
@@ -68,6 +83,11 @@ export const useStore = create<State>()(
           const p = newProject(nome);
           set((s) => ({ projects: [...s.projects, p], activeProjectId: p.id }));
           return p.id;
+        },
+        createDemoProject: () => {
+          const p = newProject('Casa exemplo — 3 dormitórios');
+          p.rooms = DEMO_ROOMS.map(([nome, area, tipoArea]) => ({ id: uid(), nome, area, tipoArea, origem: 'manual' }));
+          set((s) => ({ projects: [...s.projects, p], activeProjectId: p.id }));
         },
         updateProject: (id, patch) => patchProject(id, () => patch),
         deleteProject: (id) =>

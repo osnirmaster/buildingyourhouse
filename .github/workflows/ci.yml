@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+
+jobs:
+  # Git flow: só develop (ou hotfix/*) pode abrir PR para main; features vão para develop.
+  branch-policy:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validar origem do PR
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          echo "PR: $HEAD -> $BASE"
+          if [ "$BASE" = "main" ] && [ "$HEAD" != "develop" ] && [[ "$HEAD" != hotfix/* ]]; then
+            echo "::error::PRs para main devem vir de develop ou hotfix/*"; exit 1
+          fi
+          if [ "$BASE" = "develop" ] && [[ "$HEAD" != feature/* ]] && [[ "$HEAD" != fix/* ]] && [[ "$HEAD" != hotfix/* ]]; then
+            echo "::error::PRs para develop devem vir de feature/*, fix/* ou hotfix/*"; exit 1
+          fi
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

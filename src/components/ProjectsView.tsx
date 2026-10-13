@@ -6,7 +6,7 @@ import { PADRAO_LABEL } from '../data/referencias';
 import { Card, Empty } from './ui';
 
 export function ProjectsView({ onOpen }: { onOpen: () => void }) {
-  const { projects, cub, stages, areaTipos, activeProjectId, createProject, setActive, deleteProject, duplicateProject } =
+  const { projects, cub, stages, areaTipos, activeProjectId, createProject, createDemoProject, setActive, deleteProject, duplicateProject } =
     useStore();
   const [nome, setNome] = useState('');
 
@@ -30,7 +30,18 @@ export function ProjectsView({ onOpen }: { onOpen: () => void }) {
       </form>
 
       {projects.length === 0 ? (
-        <Empty>Nenhum projeto ainda. Crie um para começar o orçamento.</Empty>
+        <Empty>
+          Nenhum projeto ainda. Crie um para começar o orçamento ou{' '}
+          <button
+            className="btn-link"
+            onClick={() => {
+              createDemoProject();
+              onOpen();
+            }}
+          >
+            carregue um projeto de exemplo <span className="arrow">›</span>
+          </button>
+        </Empty>
       ) : (
         <table>
           <thead>
